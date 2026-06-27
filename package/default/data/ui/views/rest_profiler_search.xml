@@ -1,0 +1,50 @@
+<form version="1.1" theme="light">
+  <label>REST Profiler Search</label>
+  <description>Preview or send a saved profile, and review recent REST Profiler activity.</description>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="dropdown" token="profile" searchWhenChanged="false">
+      <label>Profile</label>
+      <search>
+        <query>| rest /servicesNS/nobody/rest_profiler/rest_profiler_profile splunk_server=local count=0 | dedup title | sort title | table title</query>
+      </search>
+      <fieldForLabel>title</fieldForLabel>
+      <fieldForValue>title</fieldForValue>
+    </input>
+    <input type="dropdown" token="mode" searchWhenChanged="false">
+      <label>Mode</label>
+      <choice value="preview">Preview (no network call)</choice>
+      <choice value="send">Send (live request)</choice>
+      <default>preview</default>
+      <initialValue>preview</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Result for "$profile$" (mode: $mode$)</title>
+      <event>
+        <search>
+          <query>| restprofilersend profile="$profile$" mode="$mode$"</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">10</option>
+        <option name="list.drilldown">none</option>
+        <option name="maxLines">40</option>
+      </event>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Recent REST Profiler activity (internal logs, last 24h)</title>
+      <table>
+        <search>
+          <query>index=_internal source=*rest_profiler*.log* | head 200 | table _time log_level component message</query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="count">20</option>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</form>

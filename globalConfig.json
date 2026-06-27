@@ -1,0 +1,1152 @@
+{
+    "meta": {
+        "name": "rest_profiler",
+        "restRoot": "rest_profiler",
+        "version": "1.0.0",
+        "displayName": "REST Profiler for Splunk",
+        "schemaVersion": "0.0.10",
+        "supportedThemes": [
+            "light",
+            "dark"
+        ],
+        "hideUCCVersion": true
+    },
+    "pages": {
+        "configuration": {
+            "title": "Configuration",
+            "description": "Create and manage reusable REST API request profiles, and set the add-on logging level.",
+            "tabs": [
+                {
+                    "name": "profile",
+                    "title": "Profiles",
+                    "style": "page",
+                    "hook": {
+                        "src": "profile_hook",
+                        "type": "external"
+                    },
+                    "table": {
+                        "actions": [
+                            "edit",
+                            "clone",
+                            "delete"
+                        ],
+                        "header": [
+                            {
+                                "label": "Name",
+                                "field": "name"
+                            },
+                            {
+                                "label": "Method",
+                                "field": "http_method"
+                            },
+                            {
+                                "label": "URI",
+                                "field": "uri"
+                            },
+                            {
+                                "label": "Auth",
+                                "field": "auth_type",
+                                "mapping": {
+                                    "none": "None",
+                                    "basic": "HTTP Basic",
+                                    "token": "Token",
+                                    "client_cert": "Client cert"
+                                }
+                            },
+                            {
+                                "label": "Verify SSL",
+                                "field": "ssl_verify",
+                                "mapping": {
+                                    "1": "Enabled",
+                                    "0": "Disabled"
+                                }
+                            },
+                            {
+                                "label": "Actions",
+                                "field": "row_actions",
+                                "customCell": {
+                                    "src": "restProfilerActionCell",
+                                    "type": "external"
+                                }
+                            }
+                        ],
+                        "moreInfo": [
+                            {
+                                "label": "Name",
+                                "field": "name"
+                            },
+                            {
+                                "label": "Description",
+                                "field": "description"
+                            },
+                            {
+                                "label": "Method",
+                                "field": "http_method"
+                            },
+                            {
+                                "label": "URI",
+                                "field": "uri"
+                            },
+                            {
+                                "label": "Headers",
+                                "field": "headers"
+                            },
+                            {
+                                "label": "Content type",
+                                "field": "content_type"
+                            },
+                            {
+                                "label": "Body",
+                                "field": "body"
+                            },
+                            {
+                                "label": "Authentication",
+                                "field": "auth_type",
+                                "mapping": {
+                                    "none": "None",
+                                    "basic": "HTTP Basic",
+                                    "token": "Token",
+                                    "client_cert": "Client cert"
+                                }
+                            },
+                            {
+                                "label": "Verify SSL",
+                                "field": "ssl_verify",
+                                "mapping": {
+                                    "1": "Enabled",
+                                    "0": "Disabled"
+                                }
+                            }
+                        ]
+                    },
+                    "entity": [
+                        {
+                            "type": "text",
+                            "label": "Name",
+                            "field": "name",
+                            "help": "A unique name for this profile. Used as the stanza name and in alert actions / the restprofilersend command.",
+                            "required": true,
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Length of the name must be between 1 and 100 characters.",
+                                    "minLength": 1,
+                                    "maxLength": 100
+                                },
+                                {
+                                    "type": "regex",
+                                    "errorMsg": "Name must begin with a letter and contain only letters, numbers, and underscores.",
+                                    "pattern": "^[a-zA-Z]\\w*$"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Description",
+                            "field": "description",
+                            "help": "Optional human-readable description of what this request does.",
+                            "required": false,
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length of description is 1000 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 1000
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "URI",
+                            "field": "uri",
+                            "help": "Full request URL, e.g. https://local.me:2220/test?name=param",
+                            "required": true,
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length of the URI is 2048 characters.",
+                                    "minLength": 1,
+                                    "maxLength": 2048
+                                },
+                                {
+                                    "type": "regex",
+                                    "errorMsg": "URI must start with http:// or https://",
+                                    "pattern": "^https?://.+"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "HTTP method",
+                            "field": "http_method",
+                            "defaultValue": "GET",
+                            "required": true,
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "GET",
+                                        "label": "GET"
+                                    },
+                                    {
+                                        "value": "POST",
+                                        "label": "POST"
+                                    },
+                                    {
+                                        "value": "PUT",
+                                        "label": "PUT"
+                                    },
+                                    {
+                                        "value": "PATCH",
+                                        "label": "PATCH"
+                                    },
+                                    {
+                                        "value": "DELETE",
+                                        "label": "DELETE"
+                                    },
+                                    {
+                                        "value": "HEAD",
+                                        "label": "HEAD"
+                                    },
+                                    {
+                                        "value": "OPTIONS",
+                                        "label": "OPTIONS"
+                                    }
+                                ]
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "GET",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "body",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "content_type",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "HEAD",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "body",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "content_type",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "OPTIONS",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "body",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "content_type",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "[[any_other_value]]",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "body",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "content_type",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "textarea",
+                            "label": "Custom headers",
+                            "field": "headers",
+                            "help": "One header per line in 'Name: value' format, e.g. X-Api-Version: 2. Do not set the Authorization header here; use the Authentication section below.",
+                            "required": false,
+                            "options": {
+                                "rowsMin": 3,
+                                "rowsMax": 12
+                            },
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length of headers is 4096 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 4096
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Content type",
+                            "field": "content_type",
+                            "help": "Sets the Content-Type header for the request body. You can type a custom value.",
+                            "required": false,
+                            "options": {
+                                "createSearchChoice": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "application/json",
+                                        "label": "application/json"
+                                    },
+                                    {
+                                        "value": "application/x-www-form-urlencoded",
+                                        "label": "application/x-www-form-urlencoded"
+                                    },
+                                    {
+                                        "value": "text/plain",
+                                        "label": "text/plain"
+                                    },
+                                    {
+                                        "value": "application/xml",
+                                        "label": "application/xml"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "textarea",
+                            "label": "Body",
+                            "field": "body",
+                            "help": "Raw request body sent for POST/PUT/PATCH/DELETE. With 'Send triggering results' on and format 'Custom template', this is the per-row template and may contain $fieldname$ tokens.",
+                            "required": false,
+                            "options": {
+                                "rowsMin": 3,
+                                "rowsMax": 20
+                            },
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length of body is 100000 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 100000
+                                }
+                            ]
+                        },
+                        {
+                            "type": "radio",
+                            "label": "Send triggering results",
+                            "field": "send_results",
+                            "defaultValue": "0",
+                            "required": true,
+                            "help": "When On, the rows that triggered the alert are serialized into the request (one request per row). When Off, only the static request above is sent.",
+                            "options": {
+                                "items": [
+                                    {
+                                        "value": "1",
+                                        "label": "On"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "label": "Off"
+                                    }
+                                ],
+                                "display": true
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "0",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "result_format",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "result_fields",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "1",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "result_format",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "result_fields",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Result delivery format",
+                            "field": "result_format",
+                            "defaultValue": "json_body",
+                            "required": false,
+                            "help": "How each triggering row is placed into the request. JSON/XML/Form go in the body (Content-Type set automatically); Query params are appended to the URL; Custom template uses the Body/URL above with $fieldname$ tokens.",
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "json_body",
+                                        "label": "JSON body (application/json)"
+                                    },
+                                    {
+                                        "value": "xml_body",
+                                        "label": "XML body (application/xml)"
+                                    },
+                                    {
+                                        "value": "form_body",
+                                        "label": "Form body (x-www-form-urlencoded)"
+                                    },
+                                    {
+                                        "value": "query_params",
+                                        "label": "Query parameters (in URL)"
+                                    },
+                                    {
+                                        "value": "template",
+                                        "label": "Custom template ($field$ in Body/URL)"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "label": "Result fields to include",
+                            "field": "result_fields",
+                            "required": false,
+                            "help": "Comma-separated event fields to send (order preserved). Leave empty to send all non-internal fields. Ignored for the Custom template format.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 4096 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 4096
+                                }
+                            ]
+                        },
+                        {
+                            "type": "radio",
+                            "label": "Verify SSL certificate",
+                            "field": "ssl_verify",
+                            "defaultValue": "1",
+                            "required": true,
+                            "help": "When enabled, the server TLS certificate is validated. Disable only for trusted internal endpoints with self-signed certs.",
+                            "options": {
+                                "items": [
+                                    {
+                                        "value": "1",
+                                        "label": "Enabled"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "label": "Disabled"
+                                    }
+                                ],
+                                "display": true
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "label": "Request timeout (seconds)",
+                            "field": "request_timeout",
+                            "defaultValue": "30",
+                            "required": false,
+                            "help": "How long to wait for the server before giving up. 1-600 seconds; default 30.",
+                            "validators": [
+                                {
+                                    "type": "number",
+                                    "range": [
+                                        1,
+                                        600
+                                    ],
+                                    "errorMsg": "Timeout must be a number between 1 and 600."
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Retry attempts",
+                            "field": "retry_count",
+                            "defaultValue": "0",
+                            "required": false,
+                            "help": "How many times to retry a failed request. 0 (default) disables retries.",
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "0",
+                                        "label": "0 (no retry)"
+                                    },
+                                    {
+                                        "value": "1",
+                                        "label": "1"
+                                    },
+                                    {
+                                        "value": "2",
+                                        "label": "2"
+                                    },
+                                    {
+                                        "value": "3",
+                                        "label": "3"
+                                    },
+                                    {
+                                        "value": "4",
+                                        "label": "4"
+                                    },
+                                    {
+                                        "value": "5",
+                                        "label": "5"
+                                    }
+                                ]
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "0",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "retry_backoff",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "retry_on",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "[[any_other_value]]",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "retry_backoff",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "retry_on",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Retry backoff (seconds)",
+                            "field": "retry_backoff",
+                            "defaultValue": "2",
+                            "required": false,
+                            "help": "Initial wait before the first retry; doubles each attempt (exponential backoff). 0-300 seconds.",
+                            "validators": [
+                                {
+                                    "type": "number",
+                                    "range": [
+                                        0,
+                                        300
+                                    ],
+                                    "errorMsg": "Backoff must be a number between 0 and 300."
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Retry on",
+                            "field": "retry_on",
+                            "defaultValue": "connection",
+                            "required": false,
+                            "help": "Which failures trigger a retry. Connection problems (DNS/TLS/timeouts) are always safe to retry; 5xx/429 retries also re-send on server errors or rate limiting.",
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "connection",
+                                        "label": "Connection errors only"
+                                    },
+                                    {
+                                        "value": "connection_5xx",
+                                        "label": "Connection errors + HTTP 5xx"
+                                    },
+                                    {
+                                        "value": "connection_5xx_429",
+                                        "label": "Connection errors + 5xx + 429"
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "label": "Rate limit (seconds between requests)",
+                            "field": "rate_limit_seconds",
+                            "defaultValue": "0",
+                            "required": false,
+                            "help": "Minimum delay between consecutive requests within one alert run (per-row sending). 0 (default) disables it.",
+                            "validators": [
+                                {
+                                    "type": "number",
+                                    "range": [
+                                        0,
+                                        3600
+                                    ],
+                                    "errorMsg": "Rate limit must be a number between 0 and 3600."
+                                }
+                            ]
+                        },
+                        {
+                            "type": "radio",
+                            "label": "Use proxy",
+                            "field": "proxy_enabled",
+                            "defaultValue": "0",
+                            "required": false,
+                            "help": "Route this profile's requests through an HTTP(S) or SOCKS5 proxy.",
+                            "options": {
+                                "items": [
+                                    {
+                                        "value": "1",
+                                        "label": "Enabled"
+                                    },
+                                    {
+                                        "value": "0",
+                                        "label": "Disabled"
+                                    }
+                                ],
+                                "display": true
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "0",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "proxy_url",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "proxy_auth_type",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "proxy_username",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "proxy_password",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "1",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "proxy_url",
+                                            "display": true,
+                                            "required": true
+                                        },
+                                        {
+                                            "fieldId": "proxy_auth_type",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Proxy URL",
+                            "field": "proxy_url",
+                            "required": false,
+                            "help": "Proxy address, e.g. http://proxy.corp:3128 or socks5h://proxy.corp:1080.",
+                            "validators": [
+                                {
+                                    "type": "regex",
+                                    "errorMsg": "Proxy URL must start with http://, https://, socks5:// or socks5h://",
+                                    "pattern": "^(https?|socks5h?)://.+"
+                                },
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 2048 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 2048
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Proxy authentication",
+                            "field": "proxy_auth_type",
+                            "defaultValue": "none",
+                            "required": false,
+                            "help": "How to authenticate to the proxy itself (separate from the endpoint's Authentication method below).",
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "none",
+                                        "label": "None"
+                                    },
+                                    {
+                                        "value": "basic",
+                                        "label": "Username / password"
+                                    }
+                                ]
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "none",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "proxy_username",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "proxy_password",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "basic",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "proxy_username",
+                                            "display": true,
+                                            "required": true
+                                        },
+                                        {
+                                            "fieldId": "proxy_password",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Proxy username",
+                            "field": "proxy_username",
+                            "required": false,
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 200 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 200
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Proxy password",
+                            "field": "proxy_password",
+                            "required": false,
+                            "encrypted": true,
+                            "help": "Stored encrypted in passwords.conf.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 1024 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 1024
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Expected status codes",
+                            "field": "expected_status",
+                            "required": false,
+                            "help": "Optional success criteria: comma-separated codes or ranges, e.g. 200,201 or 200-299. Empty (default) keeps the standard rule (any response below 400 is success).",
+                            "validators": [
+                                {
+                                    "type": "regex",
+                                    "errorMsg": "Use 3-digit codes or ranges, comma separated. Example: 200-299,302",
+                                    "pattern": "^\\s*\\d{3}(\\s*-\\s*\\d{3})?(\\s*,\\s*\\d{3}(\\s*-\\s*\\d{3})?)*\\s*$"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Response must contain",
+                            "field": "response_contains",
+                            "required": false,
+                            "help": "Optional success criteria: text that must appear in the response body, e.g. \"accepted\":true. Empty (default) skips this check.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 1024 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 1024
+                                }
+                            ]
+                        },
+                        {
+                            "type": "singleSelect",
+                            "label": "Authentication method",
+                            "field": "auth_type",
+                            "defaultValue": "none",
+                            "required": true,
+                            "options": {
+                                "disableSearch": true,
+                                "autoCompleteFields": [
+                                    {
+                                        "value": "none",
+                                        "label": "None"
+                                    },
+                                    {
+                                        "value": "basic",
+                                        "label": "HTTP Basic"
+                                    },
+                                    {
+                                        "value": "token",
+                                        "label": "Token / Bearer"
+                                    },
+                                    {
+                                        "value": "client_cert",
+                                        "label": "Client certificate (mTLS)"
+                                    }
+                                ]
+                            },
+                            "modifyFieldsOnValue": [
+                                {
+                                    "fieldValue": "none",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "basic_username",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "basic_password",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_value",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_header",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "token_prefix",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "client_cert",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "client_key_passphrase",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "basic",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "basic_username",
+                                            "display": true,
+                                            "required": true
+                                        },
+                                        {
+                                            "fieldId": "basic_password",
+                                            "display": true,
+                                            "required": true
+                                        },
+                                        {
+                                            "fieldId": "token_value",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_header",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "token_prefix",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "client_cert",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "client_key_passphrase",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "token",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "basic_username",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "basic_password",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_value",
+                                            "display": true,
+                                            "required": true
+                                        },
+                                        {
+                                            "fieldId": "token_header",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "token_prefix",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "client_cert",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "client_key_passphrase",
+                                            "display": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "fieldValue": "client_cert",
+                                    "fieldsToModify": [
+                                        {
+                                            "fieldId": "basic_username",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "basic_password",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_value",
+                                            "display": false,
+                                            "required": false
+                                        },
+                                        {
+                                            "fieldId": "token_header",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "token_prefix",
+                                            "display": false
+                                        },
+                                        {
+                                            "fieldId": "client_cert",
+                                            "display": true
+                                        },
+                                        {
+                                            "fieldId": "client_key_passphrase",
+                                            "display": true
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Username",
+                            "field": "basic_username",
+                            "required": false,
+                            "help": "HTTP Basic auth username.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 200 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 200
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Password",
+                            "field": "basic_password",
+                            "required": false,
+                            "encrypted": true,
+                            "help": "HTTP Basic auth password. Stored encrypted in passwords.conf.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 1024 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 1024
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Token",
+                            "field": "token_value",
+                            "required": false,
+                            "encrypted": true,
+                            "help": "Secret token value. Stored encrypted in passwords.conf.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 4096 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 4096
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Token header name",
+                            "field": "token_header",
+                            "defaultValue": "Authorization",
+                            "required": false,
+                            "help": "Header that carries the token. Default: Authorization.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 100 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 100
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Token prefix / scheme",
+                            "field": "token_prefix",
+                            "defaultValue": "Bearer",
+                            "required": false,
+                            "help": "Prefix prepended to the token, e.g. 'Bearer'. Leave empty to send the raw token.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 50 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 50
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Client certificate (base64 PEM)",
+                            "field": "client_cert",
+                            "required": false,
+                            "encrypted": true,
+                            "help": "Base64 of a combined PEM (client certificate AND its private key). Create it with:  base64 -w0 client_combined.pem  then paste the single-line result. Stored encrypted; only used when Authentication method is 'Client certificate'.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 200000 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 200000
+                                }
+                            ]
+                        },
+                        {
+                            "type": "text",
+                            "label": "Client key passphrase",
+                            "field": "client_key_passphrase",
+                            "required": false,
+                            "encrypted": true,
+                            "help": "Passphrase for the private key, if it is encrypted.",
+                            "validators": [
+                                {
+                                    "type": "string",
+                                    "errorMsg": "Max length is 200 characters.",
+                                    "minLength": 0,
+                                    "maxLength": 200
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "loggingTab"
+                }
+            ]
+        },
+        "dashboard": {
+            "panels": [
+                {
+                    "name": "default"
+                }
+            ]
+        }
+    },
+    "alerts": [
+        {
+            "name": "rest_profiler_send_alert",
+            "label": "REST Profiler: Send request",
+            "description": "Send a saved REST Profiler profile request when this alert triggers.",
+            "iconFileName": "alerticon.png",
+            "customScript": "rest_profiler_alert",
+            "entity": [
+                {
+                    "type": "singleSelectSplunkSearch",
+                    "label": "Profile",
+                    "field": "profile",
+                    "search": "| rest /servicesNS/nobody/rest_profiler/rest_profiler_profile splunk_server=local count=0 | dedup title | sort title | table title",
+                    "valueField": "title",
+                    "labelField": "title",
+                    "help": "Select the REST profile to execute when the alert fires.",
+                    "required": true
+                },
+                {
+                    "type": "checkbox",
+                    "label": "Index the response as an event",
+                    "field": "store_response",
+                    "defaultValue": 1,
+                    "required": false,
+                    "help": "When checked, the HTTP response (status, headers, truncated body) is written back to Splunk as an event."
+                },
+                {
+                    "type": "text",
+                    "label": "Result index",
+                    "field": "result_index",
+                    "defaultValue": "main",
+                    "required": false,
+                    "help": "Index to write the response event into when 'Index the response as an event' is checked."
+                }
+            ]
+        }
+    ],
+    "customSearchCommand": [
+        {
+            "commandName": "restprofilersend",
+            "fileName": "rest_profiler_send.py",
+            "commandType": "generating",
+            "requiredSearchAssistant": true,
+            "usage": "public",
+            "description": "Executes (mode=send) or previews (mode=preview) a saved REST Profiler profile and returns the composed request and/or the HTTP response as a single event.",
+            "syntax": "restprofilersend profile=<profile_name> mode=<preview|send>",
+            "arguments": [
+                {
+                    "name": "profile",
+                    "required": true
+                },
+                {
+                    "name": "mode",
+                    "required": false,
+                    "defaultValue": "send"
+                }
+            ]
+        }
+    ]
+}
