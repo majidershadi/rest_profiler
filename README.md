@@ -5,7 +5,8 @@ Define reusable, fully-featured REST API request **profiles** and execute them a
 - **Splunk compatibility:** Splunk Enterprise 10.x
 - **Platform:** Linux
 - **License:** Apache-2.0
-- **Built with:** the Splunk UCC framework
+- **Built with:** the Splunk UCC framework 6.4.0
+- **Built with:** python 3.13.14
 
 ---
 
