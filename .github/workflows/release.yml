@@ -63,9 +63,24 @@ jobs:
         run: |
           set +e
           make appinspect-only VERSION="$VERSION"
-          code=$?
+          make_code=$?
+          set -e
+
+          status_file="dist/appinspect-${VERSION}.exit-code"
+          if [[ -f "$status_file" ]]; then
+            code="$(tr -d '[:space:]' < "$status_file")"
+          else
+            code="$make_code"
+          fi
+
+          if [[ ! "$code" =~ ^[0-9]+$ ]] || (( code < 0 || code > 255 )); then
+            echo "Invalid AppInspect exit code: $code" >&2
+            exit 1
+          fi
+
+          echo "make_exit_code=$make_code"
+          echo "appinspect_exit_code=$code"
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          exit 0
 
       - name: Preserve package and AppInspect report
         if: always()
@@ -76,6 +91,7 @@ jobs:
             dist/rest_profiler-*.tar.gz
             dist/SHA256SUMS.txt
             dist/appinspect-*.json
+            dist/appinspect-*.exit-code
           if-no-files-found: warn
           retention-days: 30
 

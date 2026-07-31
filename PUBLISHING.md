@@ -48,3 +48,7 @@ push and only when AppInspect exits with code 0.
 Upload the exact `rest_profiler-1.0.1.tar.gz` produced by a successful workflow as a
 new Splunkbase release. Use `release-notes/1.0.1.md`. Splunkbase then runs its own
 current Cloud evaluation.
+
+## AppInspect exit-code handling
+
+The workflow preserves `dist/appinspect-<version>.exit-code` so the gate reports the native AppInspect status rather than GNU Make's generic recipe-failure status 2.

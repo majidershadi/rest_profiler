@@ -5,6 +5,7 @@ OUT := output/$(TA)
 DIST := dist
 ARCHIVE := $(DIST)/$(TA)-$(VERSION).tar.gz
 APPINSPECT_REPORT := $(DIST)/appinspect-$(VERSION).json
+APPINSPECT_STATUS := $(DIST)/appinspect-$(VERSION).exit-code
 APPINSPECT_ARGS := --mode precert --included-tags cloud --included-tags self-service --data-format json --max-messages all --ci
 
 .PHONY: all help preflight purge-bytecode clean build verify package appinspect appinspect-only release
@@ -56,8 +57,12 @@ package: build
 appinspect-only:
 	@command -v splunk-appinspect >/dev/null || { echo 'splunk-appinspect is not installed' >&2; exit 1; }
 	@test -f "$(ARCHIVE)" || { echo 'Package is missing; run make package first' >&2; exit 1; }
-	rm -f "$(APPINSPECT_REPORT)"
-	splunk-appinspect inspect "$(ARCHIVE)" $(APPINSPECT_ARGS) --output-file "$(APPINSPECT_REPORT)"
+	rm -f "$(APPINSPECT_REPORT)" "$(APPINSPECT_STATUS)"
+	@set +e; \
+	  splunk-appinspect inspect "$(ARCHIVE)" $(APPINSPECT_ARGS) --output-file "$(APPINSPECT_REPORT)"; \
+	  code=$$?; \
+	  printf '%s\n' "$$code" > "$(APPINSPECT_STATUS)"; \
+	  exit "$$code"
 
 appinspect: package
 	$(MAKE) appinspect-only VERSION="$(VERSION)"

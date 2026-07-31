@@ -2,6 +2,8 @@
 
 ## [1.0.1] - 2026-07-31
 
+- Preserve and report the native AppInspect exit code instead of GNU Make's generic exit code 2.
+
 ### Fixed
 
 - Regenerated the UCC-managed static HTML bootstrap with UCC 6.5.3; AppInspect 4.3.0 still path-flags the generated loader as a future failure.
