@@ -3,7 +3,8 @@ additional_packaging.py
 
 UCC build hooks:
   1. Add the custom Search view to the generated navigation.
-  2. Overwrite the auto-generated alert-action HTML with markup that is valid for
+  2. Reject a legacy or unrendered UCC base.html before packaging.
+  3. Overwrite the auto-generated alert-action HTML with markup that is valid for
      Splunk 10's alert-action renderer (splunk-control-group / splunk-search-dropdown
      / splunk-radio-input / splunk-text-input). The generated HTML was being flagged
      as "Malformed alert action HTML", which also prevented the parameters from being
@@ -142,6 +143,42 @@ def _ensure_key_in_stanza(path, stanza, key, value):
         handle.writelines(out)
 
 
+
+def _validate_managed_base_html(base_dir, ta_name):
+    """Fail the build if UCC emitted a legacy/custom Mako bootstrap.
+
+    Splunk Cloud vetting rejects custom Mako templates. UCC 6.5.1+ renders its
+    managed bootstrap as static HTML and embeds the build timestamp into static
+    asset URLs. Keeping this assertion in the release path prevents a stale UCC
+    output directory from being packaged again.
+    """
+    path = os.path.join(base_dir, ta_name, "appserver", "templates", "base.html")
+    if not os.path.isfile(path):
+        raise RuntimeError("UCC-managed appserver/templates/base.html is missing")
+    with open(path, "r", encoding="utf-8") as handle:
+        content = handle.read()
+    forbidden = ("<%", "${", "cherrypy", "make_url(", "window.$C", "__APP_NAME__")
+    found = [marker for marker in forbidden if marker in content]
+    required = (
+        "../../config?autoload=1",
+        "../../static/@",
+        "/app/%s/js/build/entry_page.js" % ta_name,
+    )
+    missing = [marker for marker in required if marker not in content]
+    if found or missing:
+        raise RuntimeError(
+            "Unsupported UCC base.html; forbidden=%r missing=%r. "
+            "Build from a clean output directory with the pinned UCC version."
+            % (found, missing)
+        )
+    template_dir = os.path.dirname(path)
+    unexpected = sorted(
+        name for name in os.listdir(template_dir)
+        if os.path.isfile(os.path.join(template_dir, name)) and name != "base.html"
+    )
+    if unexpected:
+        raise RuntimeError("Unexpected appserver/templates files: %r" % unexpected)
+
 def _patch_python_required(base_dir, ta_name):
     """Declare python.required = 3.13 on every Python-backed stanza.
 
@@ -180,6 +217,7 @@ def _apply(base_dir, ta_name):
         )
     )
     _remove_demo_input(base_dir, ta_name)
+    _validate_managed_base_html(base_dir, ta_name)
     _scrub_arch_binaries(base_dir, ta_name)
     _patch_python_required(base_dir, ta_name)
 

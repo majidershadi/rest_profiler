@@ -33,6 +33,11 @@ Compatibility
 Designed for Splunk Enterprise 10.x. Using earlier versions is not
 recommended (Python runtime differences).
 
+1.0.1
+-----
+- Refreshed the UCC-managed static bootstrap for current Splunk Cloud vetting.
+- No profile, alert-action, search-command, or saved-configuration changes.
+
 1.0.0
 -----
 - First stable release.

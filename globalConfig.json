@@ -2,7 +2,7 @@
     "meta": {
         "name": "rest_profiler",
         "restRoot": "rest_profiler",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "displayName": "REST Profiler for Splunk",
         "schemaVersion": "0.0.10",
         "supportedThemes": [

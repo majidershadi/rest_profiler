@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# REST Profiler source and generated release artifacts
+/output/
+/dist/
+/rest_profiler-*.tar.gz
+
+# The generic Python template above ignores *.manifest and every lib/ directory.
+# These two files are build inputs and must remain tracked.
+!package/app.manifest
+!package/lib/
+package/lib/*
+!package/lib/requirements.txt

@@ -5,8 +5,8 @@ Define reusable, fully-featured REST API request **profiles** and execute them a
 - **Splunk compatibility:** Splunk Enterprise 10.x
 - **Platform:** Linux
 - **License:** Apache-2.0
-- **Built with:** the Splunk UCC framework 6.4.0
-- **Built with:** python 3.13.14
+- **Built with:** the Splunk UCC framework 6.5.3
+- **Python:** compatible with the supported Splunk Python runtimes
 
 ---
 
@@ -28,6 +28,14 @@ Define reusable, fully-featured REST API request **profiles** and execute them a
 - [Building from source](#building-from-source)
 - [Security model](#security-model)
 - [License](#license)
+
+---
+
+## Release status
+
+Current release: **1.0.1** (2026-07-31). This patch refreshes the UCC-managed static bootstrap used by the Configuration and Dashboard views and restores source files that were accidentally excluded by the generic `.gitignore` rules.
+
+Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.0.1.md`](release-notes/1.0.1.md) for the release notes.
 
 ---
 
@@ -97,7 +105,7 @@ Alert action       ─┘          │
 ### From the CLI
 
 ```bash
-$SPLUNK_HOME/bin/splunk install app rest_profiler-1.0.0.tar.gz -auth <admin>:<password>
+$SPLUNK_HOME/bin/splunk install app rest_profiler-1.0.1.tar.gz -auth <admin>:<password>
 $SPLUNK_HOME/bin/splunk restart
 ```
 
@@ -270,8 +278,8 @@ Raise verbosity in **Configuration → Logging** (set DEBUG, reproduce, set back
 Requires the UCC generator (`addonfactory-ucc-generator`).
 
 ```bash
-ucc-gen build  --source package --ta-version 1.0.0
-ucc-gen package --path output/rest_profiler
+ucc-gen build --source package --ta-version 1.0.1 --overwrite
+./scripts/build_release.sh 1.0.1
 ```
 
 > The bundled Python libraries target the Splunk runtime (Python 3.9 on Splunk 10.0, 3.13 on 10.2+). `package/lib/requirements.txt` pins versions accordingly and forces a pure-Python install of any dependency that would otherwise vendor an architecture-specific binary. Don't unpin them without checking your Splunk's bundled Python version.
