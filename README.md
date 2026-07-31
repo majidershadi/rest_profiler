@@ -275,12 +275,18 @@ Raise verbosity in **Configuration → Logging** (set DEBUG, reproduce, set back
 
 ## Building from source
 
-Requires the UCC generator (`addonfactory-ucc-generator`).
+Install the pinned release tools, then use the repository Makefile as the single build interface:
 
 ```bash
-ucc-gen build --source package --ta-version 1.0.1 --overwrite
-./scripts/build_release.sh 1.0.1
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements-build.txt
+make package VERSION=1.0.1
+make appinspect-only VERSION=1.0.1
 ```
+
+`make release VERSION=1.0.1` performs a clean package build and enforces the AppInspect gate. The compatibility wrapper `./scripts/build_release.sh 1.0.1` invokes the same target.
 
 > The bundled Python libraries target the Splunk runtime (Python 3.9 on Splunk 10.0, 3.13 on 10.2+). `package/lib/requirements.txt` pins versions accordingly and forces a pure-Python install of any dependency that would otherwise vendor an architecture-specific binary. Don't unpin them without checking your Splunk's bundled Python version.
 

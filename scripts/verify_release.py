@@ -93,10 +93,15 @@ def main() -> int:
         if openapi["info"]["version"] != expected:
             fail("OpenAPI version mismatch")
 
+        # UCC 6.5.3 still generates a plain HTML loader in appserver/templates.
+        # The views reference this file directly, so deleting it would break the UI.
+        # AppInspect remains authoritative: its current path-based Mako check can
+        # report this generated file as a future_failure even though it has no
+        # Mako/CherryPy syntax.
         template_dir = root / "appserver" / "templates"
         template_files = sorted(p.name for p in template_dir.iterdir() if p.is_file())
         if template_files != ["base.html"]:
-            fail(f"Unexpected template files: {template_files}")
+            fail(f"Unexpected UCC template files: {template_files}")
         base = (template_dir / "base.html").read_text(encoding="utf-8")
         forbidden = ("<%", "${", "cherrypy", "make_url(", "window.$C", "__APP_NAME__")
         present = [x for x in forbidden if x in base]
@@ -128,7 +133,7 @@ def main() -> int:
         print(f"PASS: {APP} {expected}")
         print(f"  build: {build}")
         print(f"  UCC: {EXPECTED_UCC}")
-        print("  managed base.html: static and build-stamped")
+        print("  UCC base.html: plain static loader; official AppInspect remains authoritative")
         print("  JSON/XML/Python syntax: valid")
         print("  forbidden package artifacts: none")
     return 0
