@@ -1,7 +1,9 @@
 # Runtime target is the Splunk Enterprise Python runtime (3.9 on Splunk 10.0,
 # 3.13 on Splunk 10.2+). All libraries below are pure Python and support both.
 #
-# - solnlib / splunktaucclib are capped below 7.x, which dropped Python 3.9.
+# - UCC Framework 6.5.3 requires splunktaucclib 8.2.0 or newer at build time.
+#   splunktaucclib 8.2.0 supports Python >=3.7,<3.14 and accepts solnlib >=5,
+#   so the solnlib <7 cap remains compatible with Splunk's Python 3.9 runtime.
 # - requests 2.31.0 + urllib3 1.x is the newest combination that avoids
 #   Python 3.10+ syntax evaluated at import time.
 # - charset-normalizer is forced to a source (pure Python) install: its binary
@@ -9,8 +11,8 @@
 #   which fail Splunk AppInspect AArch64 certification and cannot load under
 #   the Splunk runtime anyway.
 --no-binary charset-normalizer
-solnlib<7
-splunktaucclib<7
+solnlib>=5,<7
+splunktaucclib>=8.2.0,<9
 requests==2.31.0
 urllib3<2
 charset-normalizer<4

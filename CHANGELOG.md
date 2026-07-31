@@ -10,6 +10,7 @@
 ### Build
 
 - Updated Splunk UCC Framework to 6.5.3.
+- Updated the packaged `splunktaucclib` range to `>=8.2.0,<9` to satisfy the UCC build-time dependency check.
 - Updated Splunk AppInspect to 4.3.0.
 - Added release verification and tag-driven GitHub release automation.
 
