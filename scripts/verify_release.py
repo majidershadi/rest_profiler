@@ -99,7 +99,8 @@ def main() -> int:
         ]
         if len(body_fields) != 1 or body_fields[0].get("encrypted") is not True:
             fail("request body must be encrypted by the generated UCC profile handler")
-        if "§secret§" not in body_fields[0].get("help", ""):
+        body_help = body_fields[0].get("help", "")
+        if "encrypted at rest" not in body_help or body_help.count("§") < 4:
             fail("request-body secret marker guidance is missing")
 
         openapi = json.loads((root / "appserver/static/openapi.json").read_text(encoding="utf-8"))
