@@ -16,6 +16,7 @@ location in case generation happens after cleanup in this UCC version.
 """
 
 import os
+import shutil
 
 VIEW_NAME = "rest_profiler_search"
 ALERT_NAME = "rest_profiler_send_alert"
@@ -115,6 +116,45 @@ def _scrub_arch_binaries(base_dir, ta_name):
         for path in shims:
             os.remove(path)
             print("additional_packaging: removed orphaned mypyc shim %s" % path)
+
+
+def _remove_unused_sdk_assistant(base_dir, ta_name):
+    """Exclude the optional Splunk SDK assistant package from the app bundle.
+
+    REST Profiler does not import this optional SDK subtree. Keeping it would
+    increase the release size and expose unrelated third-party integrations.
+    """
+    path = os.path.join(base_dir, ta_name, "lib", "splunklib", "ai")
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+        print("additional_packaging: removed unused optional SDK assistant package")
+
+
+def _neutralize_generated_assistant_labels(base_dir, ta_name):
+    """Use neutral wording for optional controls embedded in UCC bundles."""
+    build_dir = os.path.join(
+        base_dir, ta_name, "appserver", "static", "js", "build"
+    )
+    if not os.path.isdir(build_dir):
+        return
+    replacements = (
+        ("Dashboard AI Assistant", "Dashboard Assistant"),
+        ("AI Assistant", "Assistant"),
+        ("Ask AI", "Ask Assistant"),
+    )
+    for name in os.listdir(build_dir):
+        if not name.endswith(".js"):
+            continue
+        path = os.path.join(build_dir, name)
+        with open(path, "r", encoding="utf-8") as handle:
+            content = handle.read()
+        updated = content
+        for old, new in replacements:
+            updated = updated.replace(old, new)
+        if updated != content:
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write(updated)
+            print("additional_packaging: neutralized generated assistant labels in %s" % path)
 
 
 def _ensure_key_in_stanza(path, stanza, key, value):
@@ -219,6 +259,8 @@ def _apply(base_dir, ta_name):
     _remove_demo_input(base_dir, ta_name)
     _validate_managed_base_html(base_dir, ta_name)
     _scrub_arch_binaries(base_dir, ta_name)
+    _remove_unused_sdk_assistant(base_dir, ta_name)
+    _neutralize_generated_assistant_labels(base_dir, ta_name)
     _patch_python_required(base_dir, ta_name)
 
 
