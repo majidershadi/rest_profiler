@@ -33,9 +33,9 @@ Define reusable, fully-featured REST API request **profiles** and execute them a
 
 ## Release status
 
-Current release: **1.0.1** (2026-07-31). This patch refreshes the UCC-managed static bootstrap used by the Configuration and Dashboard views and restores source files that were accidentally excluded by the generic `.gitignore` rules.
+Current prerelease: **1.1.0-rc.1** (2026-08-14). This release candidate encrypts complete saved request bodies at rest and adds `§secret§` markers so sensitive body fragments are masked in previews and removed from the transmitted payload.
 
-Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.0.1.md`](release-notes/1.0.1.md) for the release notes.
+Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.1.0-rc.1.md`](release-notes/1.1.0-rc.1.md) for the release notes.
 
 ---
 
@@ -64,7 +64,7 @@ Because all three execution paths share one underlying client, a profile behaves
 - **Preview:** renders the exact outgoing request with secrets masked, before sending.
 - **Test send:** fires the request live and returns the full response.
 - **Authentication:** none, HTTP Basic, token/bearer, and mutual TLS (client certificate).
-- **Encrypted secrets:** passwords, tokens, certificates, key passphrases, and proxy passwords are stored encrypted in Splunk secure storage and masked in previews and logs.
+- **Encrypted secrets:** request bodies, passwords, tokens, certificates, key passphrases, and proxy passwords are stored encrypted in Splunk secure storage; `§secret§` body fragments and authentication headers are masked in previews and logs.
 - **Per-row result delivery:** send each triggering result row as a JSON, XML, or form-urlencoded body, as URL query parameters, or via a custom `$field$` template.
 - **Reliability:** request timeout, retry with exponential backoff, rate limiting, and response validation.
 - **Proxy:** HTTP/HTTPS/SOCKS5 with a separate proxy authentication option.
@@ -105,7 +105,7 @@ Alert action       ─┘          │
 ### From the CLI
 
 ```bash
-$SPLUNK_HOME/bin/splunk install app rest_profiler-1.0.1.tar.gz -auth <admin>:<password>
+$SPLUNK_HOME/bin/splunk install app rest_profiler-1.1.0.tar.gz -auth <admin>:<password>
 $SPLUNK_HOME/bin/splunk restart
 ```
 
@@ -132,6 +132,14 @@ Go to the app, open **Configuration**, and add a profile. The core fields:
 | Verify SSL certificate | Enabled by default; see [TLS and certificates](#tls-and-certificates) |
 
 Use **Preview** to see the exact request (secrets masked), and **Test send** to fire it once and inspect the response.
+
+The complete saved **Body** field is encrypted at rest through Splunk secure storage. To hide selected values in Preview as well, wrap them in section signs:
+
+```json
+{"username":"§api-user§","password":"§change-me§","scope":"events:write"}
+```
+
+Preview renders both marked values as `********`. A live request sends the values without the section signs. Use `§§` when the outgoing body needs a literal `§`. An unmatched marker stops the request with a safe validation error that does not echo the body.
 
 ---
 
@@ -282,11 +290,11 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-build.txt
-make package VERSION=1.0.1
-make appinspect-only VERSION=1.0.1
+make package VERSION=1.1.0
+make appinspect-only VERSION=1.1.0
 ```
 
-`make release VERSION=1.0.1` performs a clean package build and enforces the AppInspect gate. The compatibility wrapper `./scripts/build_release.sh 1.0.1` invokes the same target.
+`make release VERSION=1.1.0` performs a clean package build and enforces the AppInspect gate. The compatibility wrapper `./scripts/build_release.sh 1.1.0` invokes the same target.
 
 > The bundled Python libraries target the Splunk runtime (Python 3.9 on Splunk 10.0, 3.13 on 10.2+). `package/lib/requirements.txt` pins versions accordingly and forces a pure-Python install of any dependency that would otherwise vendor an architecture-specific binary. Don't unpin them without checking your Splunk's bundled Python version.
 
@@ -294,8 +302,9 @@ make appinspect-only VERSION=1.0.1
 
 ## Security model
 
-- Secrets are stored encrypted in Splunk secure storage (`passwords.conf`), never in clear text in the profile stanza.
-- Secrets are decrypted only at execution time inside `splunkd`, and are masked in previews and logs (the `Authorization` header is masked wherever a request is rendered).
+- Complete request bodies and credential fields are stored encrypted in Splunk secure storage (`passwords.conf`), never in clear text in the profile stanza.
+- Body fragments wrapped as `§secret§` are masked in previews; delimiters are removed only while composing a live request inside `splunkd`.
+- Authentication values are decrypted only at execution time. `Authorization`, `Proxy-Authorization`, and configured custom token headers are masked wherever request headers are returned or rendered.
 - Client certificates are written to temporary, owner-only files that are removed immediately after the TLS handshake.
 - SSL verification is on by default and configurable per profile.
 

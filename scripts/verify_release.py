@@ -89,6 +89,19 @@ def main() -> int:
         if meta.get("_uccVersion") != EXPECTED_UCC:
             fail(f"generated UCC version mismatch: {meta.get('_uccVersion')}")
 
+        profile_tab = next(
+            tab
+            for tab in gc["pages"]["configuration"]["tabs"]
+            if tab.get("name") == "profile"
+        )
+        body_fields = [
+            entity for entity in profile_tab["entity"] if entity.get("field") == "body"
+        ]
+        if len(body_fields) != 1 or body_fields[0].get("encrypted") is not True:
+            fail("request body must be encrypted by the generated UCC profile handler")
+        if "§secret§" not in body_fields[0].get("help", ""):
+            fail("request-body secret marker guidance is missing")
+
         openapi = json.loads((root / "appserver/static/openapi.json").read_text(encoding="utf-8"))
         if openapi["info"]["version"] != expected:
             fail("OpenAPI version mismatch")
@@ -133,6 +146,7 @@ def main() -> int:
         print(f"PASS: {APP} {expected}")
         print(f"  build: {build}")
         print(f"  UCC: {EXPECTED_UCC}")
+        print("  request body: encrypted at rest; §secret§ preview masking enabled")
         print("  UCC base.html: plain static loader; official AppInspect remains authoritative")
         print("  JSON/XML/Python syntax: valid")
         print("  forbidden package artifacts: none")

@@ -9,7 +9,8 @@ Responsibilities:
   - Load a saved profile stanza and transparently decrypt its secret fields
     (password, token, client cert/key, passphrase) via solnlib ConfManager.
   - Parse the free-form "Name: value" headers textarea into a dict.
-  - Compose a human-readable request preview with secrets masked.
+  - Compose a human-readable request preview with authentication and marked
+    request-body secrets masked.
   - Perform the HTTP request (supporting HTTP Basic, token/bearer and mutual TLS
     with an optionally pass-phrase-protected private key), returning a structured
     result dict.
@@ -50,6 +51,7 @@ REALM = "__REST_CREDENTIAL__#{app}#configs/conf-{conf}".format(
 )
 
 MASK = "********"
+SECRET_MARKER = "§"
 # Maximum number of response-body characters to return/keep.
 MAX_BODY = 100000
 # Safety cap on per-row requests sent by a single alert trigger.
@@ -193,6 +195,51 @@ def apply_template(text, event):
     return _TOKEN_RE.sub(_repl, text)
 
 
+def render_body_secrets(text, reveal=False):
+    """Render section-sign-delimited request-body secrets.
+
+    ``§secret§`` becomes ``********`` in previews and ``secret`` in a live
+    request. ``§§`` represents a literal section sign. The complete body field
+    is encrypted at rest by UCC; markers control the additional display-time
+    masking and are never transmitted.
+
+    Raises ValueError when a single marker is left unmatched. The error never
+    includes body content, so malformed secret input cannot leak through logs.
+    """
+    text = text or ""
+    rendered = []
+    in_secret = False
+    index = 0
+
+    while index < len(text):
+        if text[index] != SECRET_MARKER:
+            if reveal or not in_secret:
+                rendered.append(text[index])
+            index += 1
+            continue
+
+        if index + 1 < len(text) and text[index + 1] == SECRET_MARKER:
+            if reveal or not in_secret:
+                rendered.append(SECRET_MARKER)
+            index += 2
+            continue
+
+        if in_secret:
+            if not reveal:
+                rendered.append(MASK)
+            in_secret = False
+        else:
+            in_secret = True
+        index += 1
+
+    if in_secret:
+        raise ValueError(
+            "Request body has an unmatched section-sign secret marker. "
+            "Wrap each secret as §secret§ or use §§ for a literal section sign."
+        )
+    return "".join(rendered)
+
+
 def compose(profile, reveal=False, event=None):
     """Build the effective request components from a profile.
 
@@ -207,7 +254,7 @@ def compose(profile, reveal=False, event=None):
     url = profile.get("uri") or ""
     headers = parse_headers(profile.get("headers"))
     content_type = profile.get("content_type")
-    body = profile.get("body") or ""
+    body = render_body_secrets(profile.get("body") or "", reveal=reveal)
 
     send_results = str(profile.get("send_results", "0")).strip() == "1"
     if event is not None and send_results:
@@ -235,6 +282,7 @@ def compose(profile, reveal=False, event=None):
 
     auth_type = (profile.get("auth_type") or "none").lower()
     auth_note = "None"
+    secret_headers = []
 
     if auth_type == "basic":
         username = profile.get("basic_username") or ""
@@ -246,6 +294,7 @@ def compose(profile, reveal=False, event=None):
             headers["Authorization"] = "Basic {t}".format(t=token)
         else:
             headers["Authorization"] = "Basic {m}".format(m=MASK)
+        secret_headers.append("Authorization")
         auth_note = "HTTP Basic (username={u})".format(u=username)
 
     elif auth_type == "token":
@@ -256,6 +305,7 @@ def compose(profile, reveal=False, event=None):
         headers[header_name] = (
             "{pre} {tok}".format(pre=prefix, tok=shown) if prefix else shown
         )
+        secret_headers.append(header_name)
         auth_note = "Token in header '{h}'".format(h=header_name)
 
     elif auth_type == "client_cert":
@@ -269,6 +319,7 @@ def compose(profile, reveal=False, event=None):
         "has_body": has_body,
         "auth_type": auth_type,
         "auth_note": auth_note,
+        "secret_headers": secret_headers,
     }
 
 
@@ -346,8 +397,12 @@ def _error_result(category, exc, composed):
 def compose_masked_headers(composed):
     """Headers safe to display/return: never includes a real credential."""
     safe = {}
+    secret_names = {"authorization", "proxy-authorization"}
+    secret_names.update(
+        str(name).lower() for name in (composed or {}).get("secret_headers", [])
+    )
     for key, value in (composed or {}).get("headers", {}).items():
-        if key.lower() == "authorization":
+        if key.lower() in secret_names:
             safe[key] = MASK
         else:
             safe[key] = value

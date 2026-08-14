@@ -15,11 +15,11 @@
             "intendedAudience": null
         },
         "commonInformationModels": null,
-        "description": "Define reusable REST API request profiles (URL, method, headers, body, timeout, retry, proxy, response validation, and HTTP Basic / token / mutual-TLS authentication with encrypted secret storage), preview or test-send them, and execute them as alert actions - per triggering result row in JSON, XML, form, query-parameter, or templated format.",
+        "description": "Define reusable REST API request profiles (URL, method, headers, encrypted body, timeout, retry, proxy, response validation, and HTTP Basic / token / mutual-TLS authentication with encrypted secret storage), preview or test-send them, and execute them as alert actions - per triggering result row in JSON, XML, form, query-parameter, or templated format.",
         "id": {
             "group": null,
             "name": "rest_profiler",
-            "version": "1.0.1"
+            "version": "1.1.0"
         },
         "license": {
             "name": "Apache License 2.0",
@@ -31,9 +31,9 @@
             "text": null,
             "uri": null
         },
-        "releaseDate": null,
+        "releaseDate": "2026-08-14",
         "releaseNotes": {
-            "name": null,
+            "name": "REST Profiler for Splunk 1.1.0 release notes",
             "text": "./README.txt",
             "uri": null
         },

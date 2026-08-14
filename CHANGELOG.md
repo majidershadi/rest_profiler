@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.1.0-rc.1] - 2026-08-14
+
+### Added
+
+- Encrypt complete saved request bodies through UCC and Splunk secure storage.
+- Support `§secret§` markers that mask selected body fragments in previews and
+  are removed immediately before live transmission.
+- Support `§§` for a literal section sign and reject unmatched markers without
+  echoing request content.
+
+### Security
+
+- Mask configured custom token headers, `Authorization`, and
+  `Proxy-Authorization` in returned request metadata.
+- Add unit and package-verifier gates for body encryption and masking behavior.
+
+### Release
+
+- Accept `vX.Y.Z-rc.N` tags and create GitHub prereleases while keeping the
+  packaged Splunk app version at `X.Y.Z`.
+
 ## [1.0.1] - 2026-07-31
 
 - Preserve and report the native AppInspect exit code instead of GNU Make's generic exit code 2.

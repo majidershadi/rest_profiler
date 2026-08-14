@@ -2,7 +2,7 @@
     "meta": {
         "name": "rest_profiler",
         "restRoot": "rest_profiler",
-        "version": "1.0.1",
+        "version": "1.1.0",
         "displayName": "REST Profiler for Splunk",
         "schemaVersion": "0.0.10",
         "supportedThemes": [
@@ -320,7 +320,8 @@
                             "type": "textarea",
                             "label": "Body",
                             "field": "body",
-                            "help": "Raw request body sent for POST/PUT/PATCH/DELETE. With 'Send triggering results' on and format 'Custom template', this is the per-row template and may contain $fieldname$ tokens.",
+                            "encrypted": true,
+                            "help": "Raw request body sent for POST/PUT/PATCH/DELETE. The complete body is encrypted at rest in Splunk secure storage. Wrap values that must also be hidden in previews with section signs, for example {\"username\":\"§alice§\",\"password\":\"§change-me§\"}. The section signs are removed before sending; use §§ for a literal section sign. With 'Send triggering results' on and format 'Custom template', this is the per-row template and may contain $fieldname$ tokens.",
                             "required": false,
                             "options": {
                                 "rowsMin": 3,

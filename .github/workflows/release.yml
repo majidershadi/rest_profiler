@@ -9,7 +9,7 @@ on:
       version:
         description: "Semantic release version to validate"
         required: true
-        default: "1.0.1"
+        default: "1.1.0"
         type: string
 
 permissions:
@@ -30,16 +30,22 @@ jobs:
           INPUT_VERSION: ${{ inputs.version }}
         shell: bash
         run: |
+          PRERELEASE=false
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
-            VERSION="$INPUT_VERSION"
+            RELEASE_VERSION="$INPUT_VERSION"
           else
-            VERSION="${REF_NAME#v}"
+            RELEASE_VERSION="${REF_NAME#v}"
           fi
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid semantic version: $VERSION" >&2
+          if [[ "$RELEASE_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-rc\.[0-9]+)?$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            [[ -n "${BASH_REMATCH[2]}" ]] && PRERELEASE=true
+          else
+            echo "Invalid semantic or release-candidate version: $RELEASE_VERSION" >&2
             exit 2
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v7.0.0
@@ -49,6 +55,9 @@ jobs:
 
       - name: Install release tools
         run: python -m pip install --upgrade pip && python -m pip install -r requirements-build.txt
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
 
       - name: Build release package
         env:
@@ -111,12 +120,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
           VERSION: ${{ steps.version.outputs.version }}
+          RELEASE_VERSION: ${{ steps.version.outputs.release_version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
         run: |
-          test -f "release-notes/${VERSION}.md"
-          gh release create "$TAG" \
+          test -f "release-notes/${RELEASE_VERSION}.md"
+          release_args=()
+          if [[ "$PRERELEASE" == "true" ]]; then
+            release_args+=(--prerelease)
+          fi
+          gh release create "$TAG" "${release_args[@]}" \
             "dist/rest_profiler-${VERSION}.tar.gz" \
             "dist/SHA256SUMS.txt" \
             "dist/appinspect-${VERSION}.json" \
             --verify-tag \
-            --title "REST Profiler for Splunk ${VERSION}" \
-            --notes-file "release-notes/${VERSION}.md"
+            --title "REST Profiler for Splunk ${RELEASE_VERSION}" \
+            --notes-file "release-notes/${RELEASE_VERSION}.md"
