@@ -37,6 +37,8 @@ Current prerelease: **1.1.0-rc.1** (2026-08-14). This release candidate encrypts
 
 Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.1.0-rc.1.md`](release-notes/1.1.0-rc.1.md) for the release notes.
 
+AppInspect 4.3.0 reports 0 errors and 0 current failures, but one known `future_failure` for the UCC 6.5.3-generated static `appserver/templates/base.html`. This candidate is therefore published for GitHub testing only and is not a stable Splunkbase promotion.
+
 ---
 
 ## Why
