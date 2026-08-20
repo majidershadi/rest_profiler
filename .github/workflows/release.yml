@@ -105,14 +105,9 @@ jobs:
           retention-days: 30
 
       - name: Enforce AppInspect gate
-        env:
-          APPINSPECT_EXIT_CODE: ${{ steps.appinspect.outputs.exit_code }}
         run: |
-          if [[ "$APPINSPECT_EXIT_CODE" != "0" ]]; then
-            echo "AppInspect failed with exit code $APPINSPECT_EXIT_CODE." >&2
-            echo "The package and JSON report were preserved as workflow artifacts." >&2
-            exit "$APPINSPECT_EXIT_CODE"
-          fi
+          python scripts/evaluate_appinspect.py \
+            "dist/appinspect-${{ steps.version.outputs.version }}.json"
 
       - name: Publish GitHub release
         if: github.event_name == 'push'

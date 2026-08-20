@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.1.0] - 2026-08-20
+
+### Added
+
+- Encrypt complete saved request bodies through UCC and Splunk secure storage.
+- Support `§secret§` markers for masking selected request-body fragments in
+  previews while sending their original values without the delimiters.
+- Support `§§` for a literal section sign and safely reject unmatched markers.
+
+### Security
+
+- Mask custom token headers, `Authorization`, and `Proxy-Authorization` in
+  preview and returned request metadata.
+- Keep complete body content encrypted at rest, whether or not fragments use
+  preview-masking markers.
+
+### Release
+
+- Promote the validated 1.1.0 release candidate to stable.
+- Apply Splunk's deferred-enforcement policy only to its four named
+  Mako/CherryPy/UCC checks; all other AppInspect failures remain blocking.
+
 ## [1.1.0-rc.1] - 2026-08-14
 
 ### Added

@@ -33,11 +33,11 @@ Define reusable, fully-featured REST API request **profiles** and execute them a
 
 ## Release status
 
-Current prerelease: **1.1.0-rc.1** (2026-08-14). This release candidate encrypts complete saved request bodies at rest and adds `§secret§` markers so sensitive body fragments are masked in previews and removed from the transmitted payload.
+Current stable release: **1.1.0** (2026-08-20). This release encrypts complete saved request bodies at rest and adds `§secret§` markers so sensitive body fragments are masked in previews and removed from the transmitted payload.
 
-Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.1.0-rc.1.md`](release-notes/1.1.0-rc.1.md) for the release notes.
+Release artifacts are built and checked from a Git tag by `.github/workflows/release.yml`. See [`release-notes/1.1.0.md`](release-notes/1.1.0.md) for the release notes.
 
-AppInspect 4.3.0 reports 0 errors and 0 current failures, but one known `future_failure` for the UCC 6.5.3-generated static `appserver/templates/base.html`. This candidate is therefore published for GitHub testing only and is not a stable Splunkbase promotion.
+AppInspect 4.3.0 reports 0 errors and 0 current failures. Its sole `future_failure` is `check_for_custom_mako_templates` against the UCC 6.5.3-generated static `appserver/templates/base.html`. Splunk's [20 August 2026 enforcement update](https://github.com/splunk/addonfactory-ucc-generator/issues/2086#issuecomment-5350200104) says this check remains a warning, does not remove Splunk Cloud compatibility, and requires no action at this time. Other AppInspect findings remain release-blocking.
 
 ---
 

@@ -1,54 +1,52 @@
-# Publishing 1.1.0-rc.1
+# Publishing 1.1.0
 
-## Local preflight
+## Release validation
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-build.txt
-make help
+python -m unittest discover -s tests -v
 make release VERSION=1.1.0
 ```
 
-`make release` is a hard gate: it builds, verifies, packages, checksums, and runs
-AppInspect. Do not publish unless it exits successfully.
+The release target builds, verifies, packages, checksums, runs AppInspect, and
+applies `scripts/evaluate_appinspect.py` as the policy gate.
 
-For diagnosis while AppInspect is failing:
+Splunk's [20 August 2026 enforcement update](https://github.com/splunk/addonfactory-ucc-generator/issues/2086#issuecomment-5350200104)
+keeps these four checks as non-enforcing warnings:
 
-```bash
-make clean
-make package VERSION=1.1.0
-make appinspect-only VERSION=1.1.0
-```
+- `check_for_custom_mako_templates`
+- `check_for_existence_of_python_code_block_in_mako_template`
+- `check_cherrypy_controllers`
+- `check_for_ucc_framework_version`
 
-Review `dist/appinspect-1.1.0.json`. The current UCC/AppInspect template mismatch is
-documented in `APPINSPECT_MAKO_ESCALATION.md`.
+Only those names may be accepted as `future_failure`. Any AppInspect error,
+failure, or unlisted future failure blocks publication.
 
 ## GitHub release
 
-Commit the release files and push `main`. Create the `v1.1.0-rc.1` tag only
-after the unit, package, and AppInspect gates pass:
+After the policy gate passes, merge the release commit to `main`, create the
+stable tag, and publish the verified archive, checksum, and AppInspect JSON:
 
 ```bash
-git add .
-git commit -m "feat: encrypt and mask request body secrets"
-git push origin main
-git tag -a v1.1.0-rc.1 -m "REST Profiler for Splunk 1.1.0-rc.1"
-git push origin v1.1.0-rc.1
+git tag v1.1.0
+git push origin main v1.1.0
 ```
 
-Use **Actions → Build and publish release → Run workflow** to validate `1.1.0`
-from `main` without moving a tag. The workflow always preserves the package,
-checksum, and AppInspect JSON as a workflow artifact. A `vX.Y.Z-rc.N` tag
-creates a GitHub prerelease only when AppInspect exits with code 0.
+The tag workflow uses `release-notes/1.1.0.md` and publishes a stable GitHub
+release. The packaged Splunk version and tag version are both `1.1.0`.
 
 ## Splunkbase release
 
-Do not upload a release candidate to Splunkbase as the default release. After
-prerelease validation, promote the same source as `v1.1.0`, rebuild
-`rest_profiler-1.1.0.tar.gz`, and upload that stable artifact with final notes.
+Upload `dist/rest_profiler-1.1.0.tar.gz` and use the prepared store copy in
+`SPLUNKBASE_1.1.0.md`. Retain `dist/SHA256SUMS.txt` and
+`dist/appinspect-1.1.0.json` with the release records.
 
-## AppInspect exit-code handling
+## Native AppInspect status
 
-The workflow preserves `dist/appinspect-<version>.exit-code` so the gate reports the native AppInspect status rather than GNU Make's generic recipe-failure status 2.
+`dist/appinspect-1.1.0.exit-code` preserves the native AppInspect status. A
+nonzero native code is not hidden: the policy evaluator must confirm that the
+report contains no current errors or failures and only explicitly deferred
+future findings.

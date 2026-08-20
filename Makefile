@@ -20,7 +20,7 @@ help:
 	  '  make verify VERSION=x.y.z      Verify the generated app' \
 	  '  make package VERSION=x.y.z     Build, verify, package, and checksum' \
 	  '  make appinspect VERSION=x.y.z  Package and run AppInspect' \
-	  '  make release VERSION=x.y.z     Clean package plus AppInspect gate' \
+	  '  make release VERSION=x.y.z     Clean package plus AppInspect policy gate' \
 	  '  make clean                     Remove generated release artifacts'
 
 preflight:
@@ -69,5 +69,9 @@ appinspect: package
 
 release:
 	$(MAKE) clean
-	$(MAKE) appinspect VERSION="$(VERSION)"
+	$(MAKE) package VERSION="$(VERSION)"
+	@set +e; \
+	  $(MAKE) appinspect-only VERSION="$(VERSION)"; \
+	  set -e; \
+	  $(PYTHON) scripts/evaluate_appinspect.py "$(APPINSPECT_REPORT)"
 	@echo "Release validation passed: $(ARCHIVE)"
